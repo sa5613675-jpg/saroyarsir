@@ -19,13 +19,10 @@ sms_templates_bp = Blueprint('sms_templates', __name__)
 def get_templates():
     """Get all SMS templates"""
     try:
-        # Get templates from database
+        # Get templates from database (permanent storage for all teachers)
         db_templates = Settings.query.filter(
             Settings.key.like('sms_template_%')
         ).all()
-        
-        # Get session templates
-        session_templates = session.get('custom_templates', {})
         
         # Hardcoded short templates (not editable)
         hardcoded_templates = {
@@ -63,14 +60,14 @@ def get_templates():
             }
         }
         
-        # Custom templates (user can edit these)
+        # Custom templates (user can edit these - stored in database)
         templates = {
             'custom_exam': {
                 'name': 'Custom Exam Message',
                 'description': 'Customizable exam message',
                 'variables': ['student_name', 'subject', 'marks', 'total', 'date'],
                 'default': "{student_name} scored {marks}/{total} in {subject} on {date}",
-                'current': session_templates.get('custom_exam', ''),
+                'current': '',  # Will be populated from database
                 'saved': None,
                 'editable': True,
                 'max_sms': 2
@@ -80,7 +77,7 @@ def get_templates():
                 'description': 'General purpose message',
                 'variables': ['student_name', 'message', 'date'],
                 'default': "{student_name}: {message} ({date})",
-                'current': session_templates.get('custom_general', ''),
+                'current': '',  # Will be populated from database
                 'saved': None,
                 'editable': True,
                 'max_sms': 2
@@ -90,11 +87,13 @@ def get_templates():
         # Merge hardcoded and custom templates
         all_templates = {**hardcoded_templates, **templates}
         
-        # Update with saved templates from database (only for editable ones)
+        # Update with saved templates from database (for ALL editable templates)
         for db_template in db_templates:
             template_type = db_template.key.replace('sms_template_', '')
             if template_type in all_templates and all_templates[template_type].get('editable', True):
-                all_templates[template_type]['saved'] = db_template.value.get('message', '') if db_template.value else ''
+                saved_message = db_template.value.get('message', '') if db_template.value else ''
+                all_templates[template_type]['saved'] = saved_message
+                all_templates[template_type]['current'] = saved_message  # Show database value as current
         
         return success_response('Templates retrieved successfully', all_templates)
         
@@ -159,13 +158,6 @@ def update_template(template_type):
             db.session.add(template_setting)
         
         db.session.commit()
-        
-        # Also store in session for immediate use (backward compatibility)
-        if 'custom_templates' not in session:
-            session['custom_templates'] = {}
-        
-        session['custom_templates'][template_type] = message
-        session.permanent = True
         
         return success_response('Template saved permanently to database', {
             'template_type': template_type,
@@ -233,13 +225,17 @@ def save_template(template_type):
 @login_required
 @require_role('TEACHER', 'SUPER_USER')
 def reset_template(template_type):
-    """Reset SMS template to default"""
+    """Reset SMS template to default by removing from database"""
     try:
-        # Remove from session
-        if 'custom_templates' in session and template_type in session['custom_templates']:
-            del session['custom_templates'][template_type]
+        # Remove from database (this resets to default for ALL teachers)
+        template_key = f"sms_template_{template_type}"
+        template_setting = Settings.query.filter_by(key=template_key).first()
         
-        # Get default short templates (hardcoded, not editable)
+        if template_setting:
+            db.session.delete(template_setting)
+            db.session.commit()
+        
+        # Get default templates
         default_templates = {
             'exam_result': "{student_name} পেয়েছে {marks}/{total} ({subject}) {date}",
             'attendance_present': "{student_name} উপস্থিত ({batch_name})",
@@ -251,12 +247,13 @@ def reset_template(template_type):
         
         default_message = default_templates.get(template_type, "Template not found")
         
-        return success_response('Template reset to default', {
+        return success_response('Template reset to default for all teachers', {
             'template_type': template_type,
             'message': default_message
         })
         
     except Exception as e:
+        db.session.rollback()
         logger.error(f"Error resetting SMS template: {e}")
         return error_response('Failed to reset template', 500)
 

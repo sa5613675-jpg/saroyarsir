@@ -1757,7 +1757,16 @@ def validate_phone_number(phone):
 def get_sms_template(template_type):
     """Get SMS template with fallback to default templates"""
     try:
-        # Try to get custom template from session first
+        # PRIORITY 1: Get template from database (permanent storage for all teachers)
+        template_key = f"sms_template_{template_type}"
+        template_setting = Settings.query.filter_by(key=template_key).first()
+        
+        if template_setting and template_setting.value:
+            message = template_setting.value.get('message')
+            if message:
+                return message
+        
+        # PRIORITY 2: Try session as fallback (for backward compatibility)
         from flask import session
         custom_templates = session.get('custom_templates', {})
         custom_template = custom_templates.get(template_type)
@@ -1765,14 +1774,7 @@ def get_sms_template(template_type):
         if custom_template:
             return custom_template
         
-        # Try to get template from Settings table
-        template_key = f"sms_template_{template_type}"
-        template_setting = Settings.query.filter_by(key=template_key).first()
-        
-        if template_setting and template_setting.value:
-            return template_setting.value.get('message', get_default_template(template_type))
-        
-        # Return default template
+        # PRIORITY 3: Return default template
         return get_default_template(template_type)
         
     except Exception as e:
