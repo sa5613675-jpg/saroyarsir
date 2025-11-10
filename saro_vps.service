@@ -3,16 +3,17 @@ Description=SmartGardenHub Flask Application (Saro Student Management)
 After=network.target
 
 [Service]
-Type=notify
+Type=simple
 User=root
-WorkingDirectory=/var/www/saroyarsir
-Environment="PATH=/var/www/saroyarsir/venv/bin"
+WorkingDirectory=/root/saroyarsir
+Environment="PATH=/usr/local/bin:/usr/bin:/bin"
 Environment="FLASK_ENV=production"
 Environment="PORT=8001"
 Environment="SECRET_KEY=change-this-to-a-secure-random-string-in-production"
+Environment="DATABASE_URL=sqlite:////root/saroyarsir/smartgardenhub_production.db"
 
 # Using gunicorn with port 8001 and SQLite
-ExecStart=/var/www/saroyarsir/venv/bin/gunicorn --config gunicorn.conf.py wsgi:app
+ExecStart=/usr/bin/python3 -m gunicorn --config gunicorn.conf.py app:app
 
 # Restart policy
 Restart=always
