@@ -1,0 +1,79 @@
+================================================================================
+🚀 VPS DEPLOYMENT - FOR EXISTING DATABASE
+================================================================================
+
+YOUR VPS PATH: /var/www/saroyarsir
+YOUR DATABASE: /var/www/saroyarsir/smartgardenhub.db (will be preserved!)
+
+================================================================================
+QUICK DEPLOY COMMANDS
+================================================================================
+
+# Step 1: SSH to VPS
+ssh root@195.201.48.84
+
+# Step 2: Go to your project directory
+cd /var/www/saroyarsir
+
+# Step 3: Pull latest code
+git pull origin main
+
+# Step 4: Run deployment script
+chmod +x deploy_vps_existing_db.sh
+./deploy_vps_existing_db.sh
+
+# That's it! Your app will restart with all new features!
+
+================================================================================
+WHAT WILL HAPPEN
+================================================================================
+✅ Your existing database will be PRESERVED
+✅ All your students, teachers, batches, exams will remain
+✅ New tables will be added for online exams
+✅ App will restart with new features on port 8001
+
+================================================================================
+NEW FEATURES ADDED
+================================================================================
+✅ Online MCQ Exams (Bangla + Math equations support)
+✅ Mobile-responsive exam interface for students
+✅ Fee system updated with 14 columns
+✅ SMS templates now save permanently
+
+================================================================================
+IMPORTANT FILES
+================================================================================
+Service File: /etc/systemd/system/saro_vps.service
+Database:     /var/www/saroyarsir/smartgardenhub.db (YOUR EXISTING DB)
+App Dir:      /var/www/saroyarsir/
+Logs:         sudo journalctl -u saro_vps -f
+
+================================================================================
+SERVICE COMMANDS
+================================================================================
+Start:   sudo systemctl start saro_vps
+Stop:    sudo systemctl stop saro_vps
+Restart: sudo systemctl restart saro_vps
+Status:  sudo systemctl status saro_vps
+Logs:    sudo journalctl -u saro_vps -f
+
+================================================================================
+ACCESS APPLICATION
+================================================================================
+URL: http://195.201.48.84:8001
+
+Your existing login credentials will work!
+
+================================================================================
+AFTER DEPLOYMENT
+================================================================================
+
+The new tables will be created automatically when you start the app:
+- online_exams
+- online_questions
+- online_exam_attempts
+- online_student_answers
+
+All your existing data remains untouched!
+
+================================================================================

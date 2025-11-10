@@ -34,9 +34,8 @@ class ProductionConfig(Config):
     DEBUG = False
     
     # SQLite database for production
-    # Using absolute path for VPS deployment
-    base_dir = Path(__file__).parent.absolute()
-    SQLALCHEMY_DATABASE_URI = f"sqlite:///{base_dir}/smartgardenhub_production.db"
+    # Using absolute path for VPS deployment at /var/www/saroyarsir
+    SQLALCHEMY_DATABASE_URI = "sqlite:////var/www/saroyarsir/smartgardenhub.db"
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ECHO = False
 
