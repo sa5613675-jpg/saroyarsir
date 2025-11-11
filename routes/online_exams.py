@@ -77,11 +77,11 @@ def get_exams():
             
             exams_data.append(exam_dict)
         
-    current_app.logger.info(f"[online_exams.get_exams] returning count={len(exams_data)}")
-    return success_response('Exams retrieved successfully', exams_data)
+        current_app.logger.info(f"[online_exams.get_exams] returning count={len(exams_data)}")
+        return success_response('Exams retrieved successfully', exams_data)
     
     except Exception as e:
-    current_app.logger.error(f'[online_exams.get_exams] Error: {str(e)}')
+        current_app.logger.error(f'[online_exams.get_exams] Error: {str(e)}')
         return error_response(f'Failed to get exams: {str(e)}', 500)
 
 @online_exams_bp.route('', methods=['POST'])
