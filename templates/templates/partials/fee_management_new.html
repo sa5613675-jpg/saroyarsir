@@ -359,15 +359,11 @@ function feeManagerNew() {
             }
             this.fees[studentId].exam_fee = amount;
             
-            // Only mark months that already have amounts as changed
-            // Don't create new month entries just for exam_fee
-            for (let month = 1; month <= 12; month++) {
-                const monthKey = String(month);
-                if (this.fees[studentId][monthKey] && this.fees[studentId][monthKey].amount > 0) {
-                    const key = `${studentId}_${month}`;
-                    this.changedFees.add(key);
-                }
-            }
+            // Mark this student's exam fee as changed
+            const key = `${studentId}_exam_fee`;
+            this.changedFees.add(key);
+            
+            console.log(`Updated exam_fee for student ${studentId}: ${amount}`);
         },
         
         // Update other fee
@@ -378,15 +374,11 @@ function feeManagerNew() {
             }
             this.fees[studentId].other_fee = amount;
             
-            // Only mark months that already have amounts as changed
-            // Don't create new month entries just for other_fee
-            for (let month = 1; month <= 12; month++) {
-                const monthKey = String(month);
-                if (this.fees[studentId][monthKey] && this.fees[studentId][monthKey].amount > 0) {
-                    const key = `${studentId}_${month}`;
-                    this.changedFees.add(key);
-                }
-            }
+            // Mark this student's other fee as changed
+            const key = `${studentId}_other_fee`;
+            this.changedFees.add(key);
+            
+            console.log(`Updated other_fee for student ${studentId}: ${amount}`);
         },
         
         // Mark exam fee as changed
@@ -461,7 +453,13 @@ function feeManagerNew() {
             
             console.log(`Saving ${changes.length} changed fees...`);
             
-            for (const key of changes) {
+            // Separate exam_fee/other_fee changes from monthly changes
+            const monthlyChanges = changes.filter(key => !key.includes('_exam_fee') && !key.includes('_other_fee'));
+            const extraFeeChanges = changes.filter(key => key.includes('_exam_fee') || key.includes('_other_fee'));
+            
+            console.log(`Monthly changes: ${monthlyChanges.length}, Extra fee changes: ${extraFeeChanges.length}`);
+            
+            for (const key of monthlyChanges) {
                 const [studentId, month] = key.split('_').map(Number);
                 const monthKey = String(month);
                 
@@ -476,12 +474,6 @@ function feeManagerNew() {
                 // Safety check: ensure month data exists
                 if (!feeData) {
                     console.warn(`Skipping ${key}: month ${month} data not initialized for student ${studentId}`);
-                    // Initialize it now
-                    this.fees[studentId][monthKey] = {
-                        amount: 0,
-                        fee_id: null,
-                        status: 'pending'
-                    };
                     continue;
                 }
                 
@@ -496,7 +488,7 @@ function feeManagerNew() {
                         other_fee: this.fees[studentId].other_fee || 0
                     };
                     
-                    console.log(`Saving fee:`, payload);
+                    console.log(`Saving monthly fee:`, payload);
                     
                     const response = await fetch('/api/fees/save-monthly', {
                         method: 'POST',
