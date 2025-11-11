@@ -5,10 +5,20 @@ These are per-student fees, not per-month fees
 """
 import sys
 import os
+from pathlib import Path
 from sqlalchemy import create_engine, text, inspect, Numeric
 
-# Get database URI from environment or use default
-DATABASE_URI = os.getenv('DATABASE_URL', 'sqlite:///smartgardenhub.db')
+# Use the same database as the app (SQLite for production)
+# Check if running on VPS (production) or local (development)
+if os.path.exists('/var/www/saroyarsir'):
+    # VPS Production - use production SQLite path
+    DATABASE_URI = 'sqlite:////var/www/saroyarsir/smartgardenhub.db'
+    print("🚀 Running on VPS (Production)")
+else:
+    # Local Development
+    base_dir = Path(__file__).parent
+    DATABASE_URI = f"sqlite:///{base_dir}/smartgardenhub.db"
+    print("💻 Running on Local (Development)")
 
 def add_student_fee_columns():
     """Add exam_fee and others_fee columns to users table"""
