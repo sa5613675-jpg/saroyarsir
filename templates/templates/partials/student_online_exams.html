@@ -1,4 +1,5 @@
-<div x-data="studentOnlineExams()" class="space-y-6">
+<!-- Student Online Exams Partial v1.1 (Adds auto init & debug logging) -->
+<div x-data="studentOnlineExams()" x-init="init(); console.log('🎯 student_online_exams partial init triggered');" class="space-y-6">
     <!-- Add MathJax for scientific equations -->
     <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
@@ -199,7 +200,9 @@ function studentOnlineExams() {
         isSubmitting: false, // Prevent double submission
 
         async init() {
+            console.log('🧪 studentOnlineExams.init() start');
             await this.loadExams();
+            console.log('🧪 Exams loaded count:', this.exams.length);
         },
 
         // Render mathematical equations
@@ -211,10 +214,16 @@ function studentOnlineExams() {
 
         async loadExams() {
             try {
-                const response = await fetch('/api/online-exams');
-                const data = await response.json();
-                if (data.success) {
-                    this.exams = data.data.filter(exam => exam.is_published);
+                console.log('📡 Fetching /api/online-exams ...');
+                const response = await fetch('/api/online-exams', {credentials: 'same-origin'});
+                console.log('📡 Status:', response.status);
+                const payload = await response.json();
+                console.log('📡 Response JSON:', payload);
+                if (payload.success && Array.isArray(payload.data)) {
+                    this.exams = payload.data.filter(exam => exam.is_published);
+                    console.log('✅ Published exams for student:', this.exams.length);
+                } else {
+                    console.warn('⚠️ Unexpected exams response shape');
                 }
             } catch (error) {
                 console.error('Failed to load exams:', error);
