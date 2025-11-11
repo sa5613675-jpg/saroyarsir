@@ -358,6 +358,21 @@ function feeManagerNew() {
                 this.fees[studentId] = {};
             }
             this.fees[studentId].exam_fee = amount;
+            
+            // Mark all months for this student as changed since exam_fee applies to all
+            for (let month = 1; month <= 12; month++) {
+                const key = `${studentId}_${month}`;
+                this.changedFees.add(key);
+                
+                // Ensure the month data exists
+                if (!this.fees[studentId][String(month)]) {
+                    this.fees[studentId][String(month)] = {
+                        amount: 0,
+                        fee_id: null,
+                        status: 'pending'
+                    };
+                }
+            }
         },
         
         // Update other fee
@@ -367,6 +382,21 @@ function feeManagerNew() {
                 this.fees[studentId] = {};
             }
             this.fees[studentId].other_fee = amount;
+            
+            // Mark all months for this student as changed since other_fee applies to all
+            for (let month = 1; month <= 12; month++) {
+                const key = `${studentId}_${month}`;
+                this.changedFees.add(key);
+                
+                // Ensure the month data exists
+                if (!this.fees[studentId][String(month)]) {
+                    this.fees[studentId][String(month)] = {
+                        amount: 0,
+                        fee_id: null,
+                        status: 'pending'
+                    };
+                }
+            }
         },
         
         // Mark exam fee as changed
