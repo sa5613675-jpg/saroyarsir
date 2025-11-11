@@ -1,4 +1,4 @@
-<!-- Fee Management Component - Completely Rewritten -->
+<!-- Fee Management Component - v2.0 Student-Level Extra Fees (Nov 11, 2025) -->
 <div class="space-y-6" x-data="feeManagerNew()" x-init="init()">
     <!-- Header -->
     <div class="flex justify-between items-center">
@@ -201,7 +201,8 @@ function feeManagerNew() {
         
         // Initialize
         async init() {
-            console.log('Fee Manager initialized');
+            console.log('📊 Fee Manager v2.0 - Student-Level Extra Fees (Nov 11, 2025)');
+            console.log('✅ Using separate API for exam_fee and other_fee');
             this.error = '';
             this.message = '';
             await this.loadBatches();
