@@ -309,11 +309,13 @@ function onlineExamManagement() {
                         allow_retake: true
                     };
                 } else {
-                    alert('Error: ' + data.message);
+                    // Handle error - check both 'message' and 'error' fields
+                    const errorMsg = data.message || data.error || 'Unknown error';
+                    alert('Error: ' + errorMsg);
                 }
             } catch (error) {
                 console.error('Failed to create exam:', error);
-                alert('Failed to create exam');
+                alert('Failed to create exam: ' + error.message);
             }
         },
 
