@@ -14,6 +14,9 @@
     async function loadExams() {
         const user = JSON.parse(localStorage.getItem('user') || '{}');
         console.log('📚 Student Monthly Exams - User data:', user);
+        console.log('📚 user.allBatchIds:', user.allBatchIds);
+        console.log('📚 user.batches:', user.batches);
+        console.log('📚 user.batchId:', user.batchId);
         
         // Get ALL batch IDs from user session
         let batchIds = user.allBatchIds || [];
@@ -21,7 +24,9 @@
         // Fallback to batches array if allBatchIds not available
         if (!batchIds.length) {
             let batches = user.batches || [];
+            console.log('📚 Fallback to batches array:', batches);
             if (!batches.length && user.allStudents && user.allStudents.length > 0) {
+                console.log('📚 Fallback to allStudents:', user.allStudents);
                 const firstStudent = user.allStudents[0];
                 batches = firstStudent.batches || [];
             }
@@ -31,7 +36,8 @@
         const container = document.getElementById('monthlyExamsContent');
         
         if (!batchIds.length) {
-            container.innerHTML = '<div class="text-center py-12"><div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 max-w-md mx-auto"><p class="text-gray-700 font-medium mb-2">No batches assigned</p><p class="text-sm text-gray-600">Please contact your teacher to be assigned to a batch.</p></div></div>';
+            console.error('❌ No batch IDs found! User object:', user);
+            container.innerHTML = '<div class="text-center py-12"><div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 max-w-md mx-auto"><p class="text-gray-700 font-medium mb-2">No batches assigned</p><p class="text-sm text-gray-600">Please contact your teacher to be assigned to a batch.</p><p class="text-xs text-gray-500 mt-2">Debug: Check console (F12) for user data</p></div></div>';
             return;
         }
         

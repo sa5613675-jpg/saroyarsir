@@ -38,6 +38,11 @@ window.allDocuments = [];
 window.documentsLoaded = false;
 
 window.loadDocuments = function() {
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    console.log('📄 Documents - User data:', user);
+    console.log('📄 User batches:', user.batches);
+    console.log('📄 User allBatchIds:', user.allBatchIds);
+    
     if (window.documentsLoaded && window.allDocuments.length > 0) {
         console.log('📄 Documents already loaded:', window.allDocuments.length);
         return;

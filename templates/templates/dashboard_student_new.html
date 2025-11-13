@@ -327,6 +327,9 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     if (userData && userData.id) {
         console.log('💾 Storing user data in localStorage:', userData);
+        console.log('💾 User batches:', userData.batches);
+        console.log('💾 User allBatchIds:', userData.allBatchIds);
+        console.log('💾 User batchId:', userData.batchId);
         localStorage.setItem('user', JSON.stringify(userData));
     } else {
         console.warn('⚠️ No user data from server session');
