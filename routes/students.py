@@ -181,9 +181,10 @@ def create_student():
                             return error_response('Student with this name and guardian phone already exists. Please provide a batch to enroll them in.', 409)
                         break
                 
-                # If no same student found, it's a SIBLING - allow creation
+                # If no same student found, it's a SIBLING - allow creation to continue
                 if not same_student_found:
-                    print(f"INFO: Guardian phone {phone} exists for {len(existing_users)} student(s), but creating NEW student (sibling with different name)")
+                    print(f"✅ SIBLING DETECTED: Guardian phone {phone} exists for {len(existing_users)} student(s), but creating NEW student with name '{data['firstName']} {data['lastName']}'")
+                    # Don't return - let the code continue to create the new student below
             
             # Check if phone belongs to teacher/admin (not student)
             existing_non_student = User.query.filter_by(phoneNumber=phone).filter(User.role != UserRole.STUDENT).first()
@@ -249,6 +250,7 @@ def create_student():
             student_id = f"{current_year}{count + 1:04d}"
         
         # Create new student
+        print(f"🆕 CREATING NEW STUDENT: Name='{data['firstName']} {data['lastName']}', Phone={phone}, Guardian={data.get('guardianName', 'N/A')}")
         student = User(
             phoneNumber=phone,  # This will be guardian phone for login
             phone=phone,  # Set phone field to same as phoneNumber for SMS
