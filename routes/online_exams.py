@@ -393,13 +393,20 @@ def delete_question(exam_id, question_id):
 def start_exam(exam_id):
     """Start an exam attempt"""
     try:
+        current_app.logger.info(f'🎬 START EXAM - Exam ID: {exam_id}')
         current_user = get_current_user()
+        current_app.logger.info(f'🎬 User: {current_user.id} ({current_user.first_name})')
+        
         exam = OnlineExam.query.get(exam_id)
         
         if not exam:
+            current_app.logger.error(f'❌ Exam {exam_id} not found')
             return error_response('Exam not found', 404)
         
+        current_app.logger.info(f'🎬 Exam found: {exam.title}')
+        
         if not exam.is_published or not exam.is_active:
+            current_app.logger.warning(f'⚠️ Exam not available - Published: {exam.is_published}, Active: {exam.is_active}')
             return error_response('This exam is not available', 403)
         
         # Check if there's already an ongoing attempt
@@ -410,12 +417,13 @@ def start_exam(exam_id):
         ).first()
         
         if ongoing:
+            current_app.logger.info(f'🎬 Continuing existing attempt: {ongoing.id}')
             # Check if time has expired
             time_elapsed = int((datetime.utcnow() - ongoing.started_at).total_seconds())
             time_limit = exam.duration * 60
             
             if time_elapsed >= time_limit:
-                # Auto-submit
+                current_app.logger.warning(f'⚠️ Time expired for attempt {ongoing.id}')
                 return error_response('Time has expired. Please submit the exam.', 400)
             
             # Return the ongoing attempt
@@ -456,27 +464,37 @@ def start_exam(exam_id):
             is_submitted=True
         ).count()
         
+        current_app.logger.info(f'🎬 Previous attempts: {previous_attempts}')
+        
         if previous_attempts > 0 and not exam.allow_retake:
+            current_app.logger.warning(f'⚠️ Retakes not allowed')
             return error_response('Retakes are not allowed for this exam', 403)
         
-        # Check if exam has enough questions
-        questions_count = OnlineQuestion.query.filter_by(exam_id=exam_id).count()
-        if questions_count < exam.total_questions:
-            return error_response('This exam is not complete yet', 400)
+        # Get questions
+        questions = OnlineQuestion.query.filter_by(exam_id=exam_id).order_by(OnlineQuestion.question_order).all()
+        questions_count = len(questions)
+        
+        current_app.logger.info(f'🎬 Questions count: {questions_count}, Required: {exam.total_questions}')
+        
+        # Be more forgiving - allow exam if we have at least 1 question
+        if questions_count == 0:
+            current_app.logger.error(f'❌ No questions found for exam {exam_id}')
+            return error_response('This exam has no questions yet', 400)
         
         # Create new attempt
+        current_app.logger.info(f'🎬 Creating new attempt...')
         attempt = OnlineExamAttempt(
             exam_id=exam_id,
             student_id=current_user.id,
             attempt_number=previous_attempts + 1,
-            total_marks=questions_count  # Assuming 1 mark per question
+            total_marks=questions_count
         )
         
         db.session.add(attempt)
         db.session.commit()
+        current_app.logger.info(f'✅ Attempt created: {attempt.id}')
         
-        # Get questions (without correct answers)
-        questions = OnlineQuestion.query.filter_by(exam_id=exam_id).order_by(OnlineQuestion.question_order).all()
+        # Prepare questions data (without correct answers)
         questions_data = [{
             'id': q.id,
             'question_text': q.question_text,
@@ -488,23 +506,17 @@ def start_exam(exam_id):
             'marks': q.marks
         } for q in questions]
         
+        current_app.logger.info(f'✅ START SUCCESS - Attempt ID: {attempt.id}, Questions: {len(questions_data)}')
+        
         return success_response('Exam started successfully', {
             'attempt_id': attempt.id,
-            'exam': {
-                'id': exam.id,
-                'title': exam.title,
-                'duration': exam.duration,
-                'total_questions': exam.total_questions
-            },
-            'questions': questions_data,
-            'started_at': attempt.started_at.isoformat(),
-            'duration_minutes': exam.duration,
-            'saved_answers': {}
+            'questions': questions_data
         })
     
     except Exception as e:
         db.session.rollback()
-        current_app.logger.error(f'Error starting exam: {str(e)}')
+        current_app.logger.error(f'❌ START ERROR: {str(e)}')
+        current_app.logger.exception(e)
         return error_response(f'Failed to start exam: {str(e)}', 500)
 
 @online_exams_bp.route('/attempts/<int:attempt_id>/answer', methods=['POST'])
