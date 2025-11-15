@@ -473,6 +473,9 @@ function studentOnlineExams() {
 
             this.isSubmitting = true;
             console.log('🔒 Setting isSubmitting = true');
+            console.log('📤 Attempt ID:', this.attemptId);
+            console.log('📤 Questions count:', this.questions.length);
+            console.log('📤 Answers:', Object.keys(this.answers).length);
             
             // Stop the timer
             if (this.timer) {
@@ -486,10 +489,19 @@ function studentOnlineExams() {
                 const response = await fetch(`/api/online-exams/attempts/${this.attemptId}/submit`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    credentials: 'same-origin'
+                    credentials: 'same-origin',
+                    body: JSON.stringify({})
                 });
                 
                 console.log('📡 Submit response status:', response.status);
+                console.log('📡 Submit response ok:', response.ok);
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('❌ Response not OK:', errorText);
+                    throw new Error(`Server returned ${response.status}: ${errorText}`);
+                }
+                
                 const data = await response.json();
                 console.log('📡 Submit data:', data);
                 

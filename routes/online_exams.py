@@ -569,17 +569,25 @@ def save_answer(attempt_id):
 def submit_exam(attempt_id):
     """Submit exam and calculate results"""
     try:
+        current_app.logger.info(f'📤 SUBMIT EXAM - Attempt ID: {attempt_id}')
         current_user = get_current_user()
+        current_app.logger.info(f'📤 User: {current_user.id} ({current_user.first_name})')
+        
         # Eager load exam to avoid lazy loading issues
         attempt = OnlineExamAttempt.query.options(joinedload(OnlineExamAttempt.exam)).get(attempt_id)
         
         if not attempt:
+            current_app.logger.error(f'❌ Attempt {attempt_id} not found')
             return error_response('Attempt not found', 404)
         
+        current_app.logger.info(f'📤 Found attempt - Exam ID: {attempt.exam_id}, Student: {attempt.student_id}')
+        
         if attempt.student_id != current_user.id:
+            current_app.logger.error(f'❌ Unauthorized - Attempt student: {attempt.student_id}, Current user: {current_user.id}')
             return error_response('Unauthorized', 403)
         
         if attempt.is_submitted:
+            current_app.logger.warning(f'⚠️ Attempt {attempt_id} already submitted')
             return error_response('Exam already submitted', 400)
         
         # Check if auto-submit due to timeout
@@ -625,10 +633,11 @@ def submit_exam(attempt_id):
         
         # Get pass percentage from exam (with safety check)
         if not attempt.exam:
-            current_app.logger.error(f'Exam not found for attempt {attempt_id}')
+            current_app.logger.error(f'❌ Exam not found for attempt {attempt_id}')
             return error_response('Exam data not found', 500)
         
         pass_percentage = attempt.exam.pass_percentage
+        current_app.logger.info(f'📊 Score: {total_score}/{total_marks}, Pass: {pass_percentage}%')
         
         # Update attempt
         attempt.is_submitted = True
@@ -640,12 +649,16 @@ def submit_exam(attempt_id):
         attempt.is_passed = attempt.percentage >= pass_percentage
         attempt.auto_submitted = auto_submit
         
+        current_app.logger.info(f'💾 Committing to database...')
         db.session.commit()
+        current_app.logger.info(f'✅ Database commit successful')
         
         # Format time_taken for display
         minutes = time_taken // 60
         seconds = time_taken % 60
         time_taken_display = f"{minutes}m {seconds}s"
+        
+        current_app.logger.info(f'✅ SUBMIT SUCCESS - Score: {total_score}/{total_marks} ({attempt.percentage:.1f}%)')
         
         return success_response('Exam submitted successfully', {
             'attempt_id': attempt.id,
@@ -659,7 +672,8 @@ def submit_exam(attempt_id):
     
     except Exception as e:
         db.session.rollback()
-        current_app.logger.error(f'Error submitting exam: {str(e)}')
+        current_app.logger.error(f'❌ SUBMIT ERROR: {str(e)}')
+        current_app.logger.exception(e)  # Log full traceback
         return error_response(f'Failed to submit exam: {str(e)}', 500)
 
 @online_exams_bp.route('/attempts/<int:attempt_id>/results', methods=['GET'])
