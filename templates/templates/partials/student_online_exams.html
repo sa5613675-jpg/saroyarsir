@@ -1,15 +1,15 @@
-<!-- Student Online Exams Partial v2.0 (No browser popups! Modal confirmations for smooth UX) -->
+<!-- Student Online Exams Partial v2.1 (Simple & Direct - No confirmations!) -->
 <div x-data="studentOnlineExams()" x-init="init(); console.log('🎯 student_online_exams partial init triggered');" class="space-y-6">
     <!-- Add MathJax for scientific equations -->
     <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     
     <h2 class="text-2xl font-bold text-gray-900 mb-2">Online Exams
-        <span class="ml-2 align-middle text-xs px-2 py-1 rounded bg-green-100 text-green-700 border border-green-300" title="Exams UI version - Modal confirmations, no popups">
-            v2.0
+        <span class="ml-2 align-middle text-xs px-2 py-1 rounded bg-green-100 text-green-700 border border-green-300" title="Exams UI version - Simple direct flow">
+            v2.1
         </span>
     </h2>
-    <p class="text-xs text-gray-500 mb-4">🎉 New: Beautiful modal confirmations replace browser popups for smooth exam experience!</p>
+    <p class="text-xs text-gray-500 mb-4">📝 Click Start → Answer Questions → Click Submit → See Results!</p>
 
     <!-- Available Exams - Mobile Optimized -->
     <div class="grid grid-cols-1 gap-4">
@@ -184,95 +184,6 @@
         </div>
     </div>
 
-    <!-- Start Exam Confirmation Modal -->
-    <div x-show="showStartConfirm" class="fixed inset-0 z-[10001] overflow-y-auto" style="display: none;" x-cloak>
-        <div class="flex items-center justify-center min-h-screen p-4">
-            <div class="fixed inset-0 bg-gray-900 bg-opacity-75" @click="cancelStartExam()"></div>
-            
-            <div class="bg-white rounded-lg overflow-hidden shadow-xl transform transition-all w-full max-w-md relative z-10">
-                <div class="bg-indigo-600 text-white px-6 py-4">
-                    <h3 class="text-xl font-bold">Start Exam?</h3>
-                </div>
-
-                <div class="p-6">
-                    <div class="mb-4">
-                        <p class="text-gray-900 font-semibold mb-2" x-text="examToStart?.title"></p>
-                        <div class="space-y-2 text-sm text-gray-600">
-                            <p><i class="fas fa-clock text-indigo-600 mr-2"></i>Duration: <span x-text="examToStart?.duration"></span> minutes</p>
-                            <p><i class="fas fa-question-circle text-indigo-600 mr-2"></i>Total Questions: <span x-text="examToStart?.total_marks"></span></p>
-                            <p><i class="fas fa-trophy text-indigo-600 mr-2"></i>Pass Percentage: <span x-text="examToStart?.pass_percentage"></span>%</p>
-                        </div>
-                    </div>
-                    <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4">
-                        <div class="flex">
-                            <i class="fas fa-exclamation-triangle text-yellow-400 mr-3 mt-0.5"></i>
-                            <p class="text-sm text-yellow-700">
-                                The timer will begin immediately when you start. Make sure you have a stable internet connection.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="bg-gray-50 px-6 py-4 flex justify-end space-x-3">
-                    <button @click="cancelStartExam()" class="px-6 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400">
-                        Cancel
-                    </button>
-                    <button @click="confirmStartExam()" class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
-                        <i class="fas fa-play mr-2"></i>Start Now
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Submit Exam Confirmation Modal -->
-    <div x-show="showSubmitConfirm" class="fixed inset-0 z-[10001] overflow-y-auto" style="display: none;" x-cloak>
-        <div class="flex items-center justify-center min-h-screen p-4">
-            <div class="fixed inset-0 bg-gray-900 bg-opacity-75" @click="cancelSubmitExam()"></div>
-            
-            <div class="bg-white rounded-lg overflow-hidden shadow-xl transform transition-all w-full max-w-md relative z-10">
-                <div class="bg-indigo-600 text-white px-6 py-4">
-                    <h3 class="text-xl font-bold">Submit Exam?</h3>
-                </div>
-
-                <div class="p-6">
-                    <div class="mb-4">
-                        <div class="flex items-center justify-between mb-4">
-                            <span class="text-gray-600">Questions Answered:</span>
-                            <span class="text-2xl font-bold" :class="getAnsweredCount() === questions.length ? 'text-green-600' : 'text-orange-600'">
-                                <span x-text="getAnsweredCount()"></span> / <span x-text="questions.length"></span>
-                            </span>
-                        </div>
-                        <div x-show="getAnsweredCount() < questions.length" class="bg-orange-50 border-l-4 border-orange-400 p-4 mb-4">
-                            <div class="flex">
-                                <i class="fas fa-exclamation-triangle text-orange-400 mr-3 mt-0.5"></i>
-                                <p class="text-sm text-orange-700">
-                                    You have not answered all questions. Unanswered questions will be marked as incorrect.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="bg-red-50 border-l-4 border-red-400 p-4">
-                        <div class="flex">
-                            <i class="fas fa-lock text-red-400 mr-3 mt-0.5"></i>
-                            <p class="text-sm text-red-700">
-                                You cannot change your answers after submission. Make sure you've reviewed all questions.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="bg-gray-50 px-6 py-4 flex justify-end space-x-3">
-                    <button @click="cancelSubmitExam()" class="px-6 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400">
-                        Review Answers
-                    </button>
-                    <button @click="confirmSubmitExam()" class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
-                        <i class="fas fa-check mr-2"></i>Submit Now
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
 </div>
 
 <script>
@@ -287,10 +198,7 @@ function studentOnlineExams() {
         timer: null,
         showResults: false,
         results: null,
-        isSubmitting: false, // Prevent double submission
-        showStartConfirm: false, // Start confirmation modal
-        examToStart: null, // Exam to start after confirmation
-        showSubmitConfirm: false, // Submit confirmation modal
+        isSubmitting: false,
 
         async init() {
             console.log('🧪 studentOnlineExams.init() start');
@@ -344,16 +252,6 @@ function studentOnlineExams() {
                 return;
             }
 
-            // Show confirmation modal instead of blocking confirm dialog
-            this.examToStart = exam;
-            this.showStartConfirm = true;
-        },
-
-        async confirmStartExam() {
-            const exam = this.examToStart;
-            this.showStartConfirm = false;
-            this.examToStart = null;
-
             try {
                 console.log('📡 Fetching /api/online-exams/' + exam.id + '/start');
                 const response = await fetch(`/api/online-exams/${exam.id}/start`, {
@@ -363,30 +261,10 @@ function studentOnlineExams() {
                 });
                 
                 console.log('📡 Start exam response status:', response.status);
-                console.log('📡 Start exam response ok:', response.ok);
-                
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    console.error('❌ Response not OK:', errorText);
-                    throw new Error(`Server returned ${response.status}`);
-                }
-                
                 const data = await response.json();
                 console.log('📡 Start exam data:', data);
-                console.log('📡 data.success:', data.success);
-                console.log('📡 data.data:', data.data);
                 
-                if (data.success && data.data) {
-                    console.log('📡 attempt_id:', data.data.attempt_id);
-                    console.log('📡 questions:', data.data.questions ? data.data.questions.length : 'MISSING');
-                    
-                    if (!data.data.attempt_id) {
-                        throw new Error('No attempt_id in response');
-                    }
-                    if (!data.data.questions) {
-                        throw new Error('No questions in response');
-                    }
-                    
+                if (data.success) {
                     this.activeExam = exam;
                     this.attemptId = data.data.attempt_id;
                     this.questions = data.data.questions;
@@ -409,20 +287,13 @@ function studentOnlineExams() {
                         }
                     }, 100);
                 } else {
-                    console.error('❌ Failed to start exam:', data.message || 'Unknown error');
-                    console.error('❌ Full response:', data);
+                    console.error('❌ Failed to start exam:', data.message);
                     alert('Error: ' + (data.message || 'Failed to start exam'));
                 }
             } catch (error) {
                 console.error('❌ Exception starting exam:', error);
                 alert('Failed to start exam: ' + error.message);
             }
-        },
-
-        cancelStartExam() {
-            console.log('❌ User cancelled exam start');
-            this.showStartConfirm = false;
-            this.examToStart = null;
         },
 
         startTimer() {
@@ -484,19 +355,9 @@ function studentOnlineExams() {
             const totalQuestions = this.questions.length;
             
             console.log('📊 Answered:', answeredCount, '/', totalQuestions);
-            
-            // Show confirmation modal instead of blocking confirm
-            this.showSubmitConfirm = true;
-        },
-
-        async confirmSubmitExam() {
-            this.showSubmitConfirm = false;
 
             this.isSubmitting = true;
             console.log('🔒 Setting isSubmitting = true');
-            console.log('📤 Attempt ID:', this.attemptId);
-            console.log('📤 Questions count:', this.questions.length);
-            console.log('📤 Answers:', Object.keys(this.answers).length);
             
             // Stop the timer
             if (this.timer) {
@@ -510,19 +371,10 @@ function studentOnlineExams() {
                 const response = await fetch(`/api/online-exams/attempts/${this.attemptId}/submit`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    credentials: 'same-origin',
-                    body: JSON.stringify({})
+                    credentials: 'same-origin'
                 });
                 
                 console.log('📡 Submit response status:', response.status);
-                console.log('📡 Submit response ok:', response.ok);
-                
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    console.error('❌ Response not OK:', errorText);
-                    throw new Error(`Server returned ${response.status}: ${errorText}`);
-                }
-                
                 const data = await response.json();
                 console.log('📡 Submit data:', data);
                 
@@ -541,11 +393,6 @@ function studentOnlineExams() {
                 alert('Failed to submit exam: ' + error.message);
                 this.isSubmitting = false;
             }
-        },
-
-        cancelSubmitExam() {
-            console.log('❌ User cancelled submission');
-            this.showSubmitConfirm = false;
         },
 
         async autoSubmit() {
