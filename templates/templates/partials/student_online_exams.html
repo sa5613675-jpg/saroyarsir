@@ -149,7 +149,10 @@ window.startExam = function(examId) {
     })
     .then(function(response) { 
         console.log('📡 Start response status:', response.status);
-        return response.json(); 
+        return response.json().catch(function(err) {
+            console.error('❌ Failed to parse start_exam JSON:', err);
+            return { success: false, message: 'Failed to start exam: invalid server response' };
+        }); 
     })
     .then(function(data) {
         console.log('📡 Start response data:', data);
@@ -167,8 +170,8 @@ window.startExam = function(examId) {
             showExamModal();
             startTimer();
         } else {
-            var errorMsg = data.message || data.error || 'Failed to start exam';
-            console.error('❌ Start exam failed:', errorMsg);
+            var errorMsg = data && (data.message || data.error || data.detail) || 'Failed to start exam';
+            console.error('❌ Start exam failed:', errorMsg, 'Raw data:', data);
             alert('Error: ' + errorMsg);
         }
     })
