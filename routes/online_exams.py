@@ -394,12 +394,18 @@ def start_exam(exam_id):
     """Start an exam attempt"""
     try:
         current_user = get_current_user()
+        current_app.logger.info(f"[start_exam] user_id={current_user.id} exam_id={exam_id}")
+        
         exam = OnlineExam.query.get(exam_id)
         
         if not exam:
+            current_app.logger.error(f"[start_exam] Exam {exam_id} not found")
             return error_response('Exam not found', 404)
         
+        current_app.logger.info(f"[start_exam] Exam found: {exam.title}, is_published={exam.is_published}, is_active={exam.is_active}")
+        
         if not exam.is_published or not exam.is_active:
+            current_app.logger.warning(f"[start_exam] Exam not available: is_published={exam.is_published}, is_active={exam.is_active}")
             return error_response('This exam is not available', 403)
         
         # Check if there's already an ongoing attempt
@@ -475,8 +481,12 @@ def start_exam(exam_id):
         db.session.add(attempt)
         db.session.commit()
         
+        current_app.logger.info(f"[start_exam] Attempt created: attempt_id={attempt.id}")
+        
         # Get questions (without correct answers)
         questions = OnlineQuestion.query.filter_by(exam_id=exam_id).order_by(OnlineQuestion.question_order).all()
+        current_app.logger.info(f"[start_exam] Questions loaded: count={len(questions)}")
+        
         questions_data = [{
             'id': q.id,
             'question_text': q.question_text,
@@ -487,6 +497,8 @@ def start_exam(exam_id):
             'question_order': q.question_order,
             'marks': q.marks
         } for q in questions]
+        
+        current_app.logger.info(f"[start_exam] Success! Returning attempt_id={attempt.id} with {len(questions_data)} questions")
         
         return success_response('Exam started successfully', {
             'attempt_id': attempt.id,
@@ -504,7 +516,7 @@ def start_exam(exam_id):
     
     except Exception as e:
         db.session.rollback()
-        current_app.logger.error(f'Error starting exam: {str(e)}')
+        current_app.logger.error(f'[start_exam] Exception: {str(e)}', exc_info=True)
         return error_response(f'Failed to start exam: {str(e)}', 500)
 
 @online_exams_bp.route('/attempts/<int:attempt_id>/answer', methods=['POST'])
