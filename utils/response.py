@@ -25,6 +25,7 @@ def error_response(message="Error", status_code=400, error_code=None):
     response = {
         'success': False,
         'error': message,
+        'message': message,  # Add message field for consistency
         'timestamp': datetime.utcnow().isoformat()
     }
     

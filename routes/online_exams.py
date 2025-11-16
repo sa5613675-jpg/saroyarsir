@@ -465,10 +465,11 @@ def start_exam(exam_id):
         if previous_attempts > 0 and not exam.allow_retake:
             return error_response('Retakes are not allowed for this exam', 403)
         
-        # Check if exam has enough questions
+        # Get questions count (just warn, don't block)
         questions_count = OnlineQuestion.query.filter_by(exam_id=exam_id).count()
-        if questions_count < exam.total_questions:
-            return error_response('This exam is not complete yet', 400)
+        if questions_count == 0:
+            current_app.logger.warning(f"[start_exam] Exam {exam_id} has no questions!")
+            return error_response('This exam has no questions yet. Please contact your teacher.', 400)
         
         # Create new attempt
         attempt = OnlineExamAttempt(
