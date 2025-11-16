@@ -421,8 +421,24 @@ def start_exam(exam_id):
             time_limit = exam.duration * 60
             
             if time_elapsed >= time_limit:
-                # Auto-submit
-                return error_response('Time has expired. Please submit the exam.', 400)
+                # Auto-submit expired attempt
+                current_app.logger.info(f"[start_exam] Auto-submitting expired attempt {ongoing.id}")
+                ongoing.is_submitted = True
+                ongoing.submitted_at = datetime.utcnow()
+                
+                # Calculate score
+                answers = OnlineStudentAnswer.query.filter_by(attempt_id=ongoing.id).all()
+                correct_count = sum(1 for a in answers if a.is_correct)
+                total_questions = OnlineQuestion.query.filter_by(exam_id=exam_id).count()
+                
+                ongoing.scored_marks = correct_count
+                ongoing.total_marks = total_questions
+                ongoing.percentage = (correct_count / total_questions * 100) if total_questions > 0 else 0
+                
+                db.session.commit()
+                current_app.logger.info(f"[start_exam] Expired attempt auto-submitted, score: {ongoing.percentage}%")
+                
+                # Now fall through to create new attempt (will be blocked if retakes not allowed)
             
             # Return the ongoing attempt
             questions = OnlineQuestion.query.filter_by(exam_id=exam_id).order_by(OnlineQuestion.question_order).all()
